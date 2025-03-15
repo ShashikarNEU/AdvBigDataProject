@@ -28,3 +28,7 @@ build/
 # Misc
 *.swp
 *.swo
+
+# Package files
+package.json
+package-lock.json

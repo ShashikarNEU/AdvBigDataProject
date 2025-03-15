@@ -16,9 +16,30 @@ const getPlan = async (objectId) => {
   return plan ? JSON.parse(plan) : null
 }
 
+const updatePlanService = async (objectId, plan) => {
+  const planKey = `plan:${objectId}`;
+  const oldPlan = await getPlan(objectId);
+
+  const updatedPlan = Object.assign({}, oldPlan, plan, {
+      // Append for Multiple Cardinality Arrays
+      linkedPlanServices: oldPlan.linkedPlanServices && plan.linkedPlanServices
+          ? [...oldPlan.linkedPlanServices, ...plan.linkedPlanServices] // Append new services
+          : plan.linkedPlanServices || oldPlan.linkedPlanServices
+  });
+
+  const etag = etagCreater(JSON.stringify(updatedPlan))
+
+  updatedPlan._etag = etag // Update etag
+
+  await redisClient.set(planKey, JSON.stringify(updatedPlan));
+
+  return { planKey, etag, updatedPlan };
+};
+
+
 const deletePlan = async (objectId) => {
   const planKey = `plan:${objectId}`;
   await redisClient.del(planKey);
 }
 
-module.exports = { savePlan, getPlan, deletePlan };
+module.exports = { savePlan, getPlan, updatePlanService , deletePlan };
