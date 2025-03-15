@@ -79,6 +79,15 @@ const readPlan = async (req, res) => {
 
 const updatePlan = async (req, res) => {
   try {
+    valid = validate(req.body);
+
+    if (!valid) {
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: validate.errors
+      })
+    }
+    
     objectId = req.params.id;
     const existingPlan = await getPlan(objectId);
     if (!existingPlan) {
