@@ -1,5 +1,6 @@
 const { validate } = require('../utils/validate');
 const { savePlan, getPlan, updatePlanService, deletePlan } = require('../services/plan-service');
+const { sendToQueue } = require('../services/queue-service');
 
 const createPlan = async (req, res) => {
   try {
@@ -25,6 +26,11 @@ const createPlan = async (req, res) => {
     console.log(`Plan created: ${req.body.objectId}, ETag: ${etag}`);
     //console.log(`ETag in controller: ${etag}`);
     res.set('Etag', etag); // Set Etag in headers
+
+    console.log('[DEBUG] Sending to queue:', req.body.objectId);
+    // Push to RabbitMQ for indexing
+    await sendToQueue({ action: 'patch', id: req.body.objectId, data: req.body });
+
     return res.status(201).json({
       message: `Plan with id:${req.body.objectId} created successfully`,
       objectId: req.body.objectId
@@ -112,6 +118,9 @@ const updatePlan = async (req, res) => {
 
     console.log(`Plan updated: ${planKey}, updated plan: ${updatedPlan}`);
 
+    // Push to RabbitMQ for indexing
+    await sendToQueue({ action: 'patch', id: objectId, data: updatedPlan });
+
     res.set('Etag', etag); // Set Etag in headers
 
     const {_etag, ...filteredData} = updatedPlan
@@ -137,6 +146,7 @@ const removePlan = async (req, res) => {
       })
     }
     await deletePlan(objectId);
+    await sendToQueue({ action: 'delete', id: objectId });
     console.log(`Plan deleted: ${objectId}`);
     return res.status(204).end();
   }

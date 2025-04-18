@@ -4,13 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "start:worker": "node src/worker/indexer-worker.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@elastic/elasticsearch": "^8.17.1",
     "ajv": "^8.17.1",
+    "amqplib": "^0.10.7",
     "axios": "^1.7.9",
     "cors": "^2.8.5",
     "express": "^4.21.2",
